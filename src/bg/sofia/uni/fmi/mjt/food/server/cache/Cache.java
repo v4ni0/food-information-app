@@ -1,8 +1,6 @@
 package bg.sofia.uni.fmi.mjt.food.server.cache;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
@@ -10,72 +8,81 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class Cache {
-    private static final Path ROOT = Path.of("cache");
-    private static final Path REPORTS_DIR = ROOT.resolve("reports");
-    private static final Path BARCODES_DIR = ROOT.resolve("barcodes");
+    private final Path root;
+    private final Path reportsDir;
+    private final Path barcodesDir;
+    private final Path keywordsDir;
     private static final String JSON_EXTENSION = ".json";
+    private static Cache instance;
 
-    public Cache() {
-        try {
-            Files.createDirectories(ROOT);
-            Files.createDirectories(REPORTS_DIR);
-            Files.createDirectories(BARCODES_DIR);
-        } catch (IOException e) {
-            throw new RuntimeException("Could not create cache directories", e);
-        }
+    private Cache(Path rootPath) throws IOException {
+        this.root = rootPath;
+        this.reportsDir = root.resolve("reports");
+        this.barcodesDir = root.resolve("barcodes");
+        this.keywordsDir = root.resolve("keywords");
+        Files.createDirectories(root);
+        Files.createDirectories(reportsDir);
+        Files.createDirectories(barcodesDir);
+        Files.createDirectories(keywordsDir);
+
     }
 
-    public void saveReport(int id, String json) {
-        Path reportPath = REPORTS_DIR.resolve(id + JSON_EXTENSION);
+    public static synchronized Cache getInstance() throws IOException {
+        if (instance == null) {
+            instance = new Cache(Path.of("cache"));
+        }
+        return instance;
+    }
+
+    // Using this method only for testing purposes
+    static Cache createWithCustomPath(Path rootPath) throws IOException {
+        return new Cache(rootPath);
+    }
+
+    public synchronized void saveReport(int id, String json) throws IOException {
+        Path reportPath = reportsDir.resolve(id + JSON_EXTENSION);
         try (Writer writer = new BufferedWriter(new FileWriter(reportPath.toFile()))) {
             writer.write(json);
-        } catch (IOException e) {
-            throw new RuntimeException("Could not save report to cache", e);
         }
     }
 
-    public String loadReport(int id) {
-        Path reportPath = REPORTS_DIR.resolve(id + JSON_EXTENSION);
+    public synchronized String loadReport(int id) throws IOException {
+        Path reportPath = reportsDir.resolve(id + JSON_EXTENSION);
         if (!Files.exists(reportPath)) {
             return null;
         }
-        try (BufferedReader reader = new BufferedReader(new FileReader(reportPath.toFile()))) {
-            StringBuilder json = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                json.append(line);
-            }
-            return json.toString();
-
-        } catch (IOException e) {
-            throw new RuntimeException("Could not load report from cache", e);
-        }
+        return Files.readString(reportPath);
     }
 
-    public void saveBarcode(String barcode, String json) {
-        Path barcodePath = BARCODES_DIR.resolve(barcode + JSON_EXTENSION);
+    public synchronized void saveByBarcode(String barcode, String json) throws IOException {
+        Path barcodePath = barcodesDir.resolve(barcode + JSON_EXTENSION);
         try (Writer writer = new BufferedWriter(new FileWriter(barcodePath.toFile()))) {
             writer.write(json);
-        } catch (IOException e) {
-            throw new RuntimeException("Could not save barcode to cache", e);
         }
     }
 
-    public String loadBarcode(String barcode) {
-        Path barcodePath = BARCODES_DIR.resolve(barcode + JSON_EXTENSION);
+    public synchronized String loadBarcode(String barcode) throws IOException {
+        Path barcodePath = barcodesDir.resolve(barcode + JSON_EXTENSION);
         if (!Files.exists(barcodePath)) {
             return null;
         }
-        try (BufferedReader reader = new BufferedReader(new FileReader(barcodePath.toFile()))) {
-            StringBuilder json = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                json.append(line);
-            }
-            return json.toString();
+        return Files.readString(barcodePath);
+    }
 
-        } catch (IOException e) {
-            throw new RuntimeException("Could not load barcode from cache", e);
+    public synchronized void saveByKeywords(String keywords, String json) throws IOException {
+        String key = keywords.replace(" ", "_");
+        Path keywordsPath = keywordsDir.resolve(key + JSON_EXTENSION);
+        try (Writer writer = new BufferedWriter(new FileWriter(keywordsPath.toFile()))) {
+            writer.write(json);
         }
+    }
+
+    public synchronized String loadByKeywords(String keywords) throws IOException {
+        String sanitizedKey = keywords.replace(" ", "_");
+        Path keywordsPath = keywordsDir.resolve(sanitizedKey + JSON_EXTENSION);
+        if (!Files.exists(keywordsPath)) {
+            return null;
+        }
+        return Files.readString(keywordsPath);
     }
 }

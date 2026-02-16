@@ -24,4 +24,23 @@ public class Validator {
             throw new InvalidClientMessageException("there should be at least one keyword");
     }
 
+    public static void validateNotNull(Object obj, String message) {
+        if (obj == null) {
+            throw new IllegalArgumentException(message);
+        }
+    }
+
+    public static void validateString(String str, String message) {
+        if (str == null || str.isBlank()) {
+            throw new IllegalArgumentException(message);
+        }
+    }
+
+    public static void validateNumberNonNegative(int number, String message) {
+        if (number < 0) {
+            throw new IllegalArgumentException(message);
+        }
+    }
+
+
 }

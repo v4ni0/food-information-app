@@ -1,10 +1,13 @@
 package bg.sofia.uni.fmi.mjt.food.server.retriever;
 
-import bg.sofia.uni.fmi.mjt.food.exceptions.MissingBarcodeException;
+import bg.sofia.uni.fmi.mjt.food.exceptions.FoodRetrievalException;
+import bg.sofia.uni.fmi.mjt.food.exceptions.BarcodeNotFoundException;
+import bg.sofia.uni.fmi.mjt.food.exceptions.NoResultsFoundException;
 import bg.sofia.uni.fmi.mjt.food.server.cache.Cache;
 import bg.sofia.uni.fmi.mjt.food.server.retriever.model.FoodDetails;
 import bg.sofia.uni.fmi.mjt.food.server.retriever.model.FoodReport;
 import bg.sofia.uni.fmi.mjt.food.server.retriever.model.SearchResponse;
+import bg.sofia.uni.fmi.mjt.food.validation.Validator;
 import com.google.gson.Gson;
 
 import java.io.IOException;
@@ -24,8 +27,12 @@ public class FoodDataRetriever {
     private static final String KEYWORD_SEPARATOR = "%20";
     private static final String API_KEY_STR = "api_key=";
     private static final int GOOD_STATUS_CODE = 200;
+    private static final int NO_RESULTS_FOUND_CODE = 404;
 
     public FoodDataRetriever(String apiKey, HttpClient client, Cache cache) {
+        Validator.validateString(apiKey, "API key cannot be null or blank");
+        Validator.validateNotNull(client, "Http client cannot be null");
+        Validator.validateNotNull(cache, "Cache cannot be null");
         this.gson = new Gson();
         this.apiKey = apiKey;
         this.client = client;
@@ -42,8 +49,13 @@ public class FoodDataRetriever {
         return URI.create(uri);
     }
 
-    private FoodReport getCachedReport(int id) {
-        String json = cache.loadReport(id);
+    private FoodReport getCachedReport(int id) throws FoodRetrievalException {
+        String json;
+        try {
+            json = cache.loadReport(id);
+        } catch (IOException e) {
+            throw new FoodRetrievalException("Error while loading report from cache for id: " + id, e);
+        }
         if (json != null) {
             FoodReport report = gson.fromJson(json, FoodReport.class);
             report.filterNutrients();
@@ -52,54 +64,115 @@ public class FoodDataRetriever {
         return null;
     }
 
-    public FoodReport getFoodReport(int id) throws Exception {
+    public FoodReport getFoodReport(int id)
+        throws FoodRetrievalException, NoResultsFoundException {
+        Validator.validateNumberNonNegative(id, "Food ID cannot be negative");
         FoodReport cachedReport = getCachedReport(id);
         if (cachedReport != null) {
             return cachedReport;
         }
         URI uri = createUriForFoodId(id);
         HttpRequest request = HttpRequest.newBuilder().uri(uri).build();
-
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
-        if (response.statusCode() != GOOD_STATUS_CODE) {
-            throw new RuntimeException("Error from the API: " + response.statusCode());
+        HttpResponse<String> response;
+        try {
+            response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        } catch (IOException | InterruptedException e) {
+            throw new FoodRetrievalException("Error while retrieving food with id: " + id, e);
         }
-        cache.saveReport(id, response.body());
-        FoodReport report = gson.fromJson(response.body(), FoodReport.class);
-        report.filterNutrients();
-        return report;
+        switch (response.statusCode()) {
+            case GOOD_STATUS_CODE -> {
+                FoodReport report = gson.fromJson(response.body(), FoodReport.class);
+                try {
+                    cache.saveReport(id, gson.toJson(report));
+                } catch (IOException e) {
+                    throw new FoodRetrievalException("Error while saving report to cache for id: " + id, e);
+                }
+                report.filterNutrients();
+                return report;
+            }
+            case NO_RESULTS_FOUND_CODE -> throw new NoResultsFoundException("No food found with id: " + id);
+            default -> throw new FoodRetrievalException(
+                "Couldnt retrieve food with id: " + id + " status code: " + response.statusCode());
+        }
     }
 
-    public List<FoodDetails> getFoodByKeywords(List<String> keywords) throws IOException, InterruptedException {
-        URI uri = createUriForKeywords(keywords);
-
-        HttpRequest request = HttpRequest.newBuilder().uri(uri).build();
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
-        if (response.statusCode() != GOOD_STATUS_CODE) {
-            throw new RuntimeException("Error from the API: " + response.statusCode());
+    private void handleStatusCode(int statusCode, List<String> keywords)
+        throws FoodRetrievalException, NoResultsFoundException {
+        if (statusCode == NO_RESULTS_FOUND_CODE) {
+            throw new NoResultsFoundException("No food found with keywords: " + String.join(" ", keywords));
         }
+        if (statusCode != GOOD_STATUS_CODE) {
+            throw new FoodRetrievalException(
+                "Couldnt retrieve food with keywords: " + String.join(" ", keywords) + " status code: " +
+                    statusCode);
+        }
+    }
 
-        SearchResponse searchResponse = gson.fromJson(response.body(), SearchResponse.class);
-        List<FoodDetails> foods = searchResponse.foods();
-        if (foods != null) {
-            for (FoodDetails fd : foods) {
-                if (fd != null && fd.gtinUpc() != null && !fd.gtinUpc().isBlank()) {
-                    cache.saveBarcode(fd.gtinUpc(), gson.toJson(fd));
+    private List<FoodDetails> getCachedKeywordSearch(String keywords) throws FoodRetrievalException {
+        try {
+            String cachedJson = cache.loadByKeywords(keywords);
+            if (cachedJson != null) {
+                SearchResponse cached = gson.fromJson(cachedJson, SearchResponse.class);
+                return cached.foods();
+            }
+        } catch (IOException e) {
+            throw new FoodRetrievalException("Error loading keywords from cache: " + keywords, e);
+        }
+        return null;
+    }
+
+    private void saveFoodsToCache(String keywords, SearchResponse response)
+        throws FoodRetrievalException {
+        try {
+            String responseJSON = gson.toJson(response);
+            cache.saveByKeywords(keywords, responseJSON);
+            for (FoodDetails food : response.foods()) {
+                if (food.gtinUpc() != null) {
+                    cache.saveByBarcode(food.gtinUpc(), gson.toJson(food));
                 }
             }
+        } catch (IOException e) {
+            throw new FoodRetrievalException("Error saving keywords to cache: " + keywords, e);
         }
+    }
+
+    public List<FoodDetails> getFoodByKeywords(List<String> keywords)
+        throws FoodRetrievalException, NoResultsFoundException {
+        Validator.validateNotNull(keywords, "Keywords cannot be null");
+        String keywordKey = String.join(" ", keywords);
+
+        List<FoodDetails> cached = getCachedKeywordSearch(keywordKey);
+        if (cached != null) {
+            return cached;
+        }
+
+        URI uri = createUriForKeywords(keywords);
+        HttpRequest request = HttpRequest.newBuilder().uri(uri).build();
+        HttpResponse<String> response;
+        try {
+            response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        } catch (IOException | InterruptedException e) {
+            throw new FoodRetrievalException("Error retrieving food with keywords: " + keywordKey, e);
+        }
+        handleStatusCode(response.statusCode(), keywords);
+
+        SearchResponse searchResponse = gson.fromJson(response.body(), SearchResponse.class);
+        saveFoodsToCache(keywordKey, searchResponse);
         return searchResponse.foods();
     }
 
-    public FoodDetails getFoodByBarcode(String barcode) throws Exception {
-        String json = cache.loadBarcode(barcode);
-        if (json == null) {
-            throw new MissingBarcodeException("Barcode not found in cache");
+    public FoodDetails getFoodByBarcode(String barcode) throws BarcodeNotFoundException, FoodRetrievalException {
+        Validator.validateString(barcode, "Barcode cannot be null or blank");
+        try {
+            String json;
+            json = cache.loadBarcode(barcode);
+            if (json == null) {
+                throw new BarcodeNotFoundException("Barcode not found in cache" + barcode);
+            }
+            return gson.fromJson(json, FoodDetails.class);
+        } catch (IOException e) {
+            throw new FoodRetrievalException("Error loading barcode from cache: " + barcode, e);
         }
-        FoodDetails foodDetails = gson.fromJson(json, FoodDetails.class);
-        return foodDetails;
     }
 }
 

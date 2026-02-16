@@ -16,8 +16,27 @@ public class FoodReport {
         "fiber",
         "energy"
     );
-
     public FoodReport() {
+    }
+
+    public int fdcId() {
+        return fdcId;
+    }
+
+    public String description() {
+        return description;
+    }
+
+    public String ingredients() {
+        return ingredients;
+    }
+
+    public String gtinUpc() {
+        return gtinUpc;
+    }
+
+    public List<NutrientDetails> foodNutrients() {
+        return foodNutrients;
     }
 
     private boolean isWantedNutrient(NutrientDetails nutrientDetails) {

@@ -1,0 +1,60 @@
+--2026-02-15T22:29:12.792251400--
+Failed to connect to server at localhost:5000
+java.net.ConnectException: Connection refused: connect
+	at java.base/sun.nio.ch.Net.connect0(Native Method)
+	at java.base/sun.nio.ch.Net.connect(Net.java:546)
+	at java.base/sun.nio.ch.Net.connect(Net.java:535)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:585)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:284)
+	at java.base/java.net.Socket.connect(Socket.java:659)
+	at java.base/java.net.Socket.connect(Socket.java:597)
+	at java.base/java.net.Socket.<init>(Socket.java:464)
+	at java.base/java.net.Socket.<init>(Socket.java:276)
+	at bg.sofia.uni.fmi.mjt.food.client.FoodAnalyzerClient.start(FoodAnalyzerClient.java:61)
+	at bg.sofia.uni.fmi.mjt.food.client.FoodAnalyzerClient.main(FoodAnalyzerClient.java:81)
+
+
+--2026-02-15T22:58:43.112795400--
+Error parsing barcode for message: get-food-by-barcode --img=D:/IntelliJ/java/Food Analyzer/barcodeImages/pepsi.jpg
+bg.sofia.uni.fmi.mjt.food.exceptions.BarcodeParsingException: Couldnt parse barcode from D:/IntelliJ/java/Food
+	at bg.sofia.uni.fmi.mjt.food.client.parsing.barcode.BarcodeParser.parse(BarcodeParser.java:31)
+	at bg.sofia.uni.fmi.mjt.food.client.parsing.message.MessageParser.parse(MessageParser.java:33)
+	at bg.sofia.uni.fmi.mjt.food.client.FoodAnalyzerClient.processUserInput(FoodAnalyzerClient.java:45)
+	at bg.sofia.uni.fmi.mjt.food.client.FoodAnalyzerClient.start(FoodAnalyzerClient.java:72)
+	at bg.sofia.uni.fmi.mjt.food.client.FoodAnalyzerClient.main(FoodAnalyzerClient.java:81)
+Caused by: javax.imageio.IIOException: Can't read input file!
+	at java.desktop/javax.imageio.ImageIO.read(ImageIO.java:1264)
+	at bg.sofia.uni.fmi.mjt.food.client.parsing.barcode.BarcodeParser.parse(BarcodeParser.java:23)
+	... 4 more
+
+
+--2026-02-15T22:59:11.537945200--
+Error parsing barcode for message: get-food-by-barcode --img=D:/IntelliJ/java/Food Analyzer/barcodeImages/pepsi.jpg
+bg.sofia.uni.fmi.mjt.food.exceptions.BarcodeParsingException: Couldnt parse barcode from D:/IntelliJ/java/Food
+	at bg.sofia.uni.fmi.mjt.food.client.parsing.barcode.BarcodeParser.parse(BarcodeParser.java:31)
+	at bg.sofia.uni.fmi.mjt.food.client.parsing.message.MessageParser.parse(MessageParser.java:33)
+	at bg.sofia.uni.fmi.mjt.food.client.FoodAnalyzerClient.processUserInput(FoodAnalyzerClient.java:45)
+	at bg.sofia.uni.fmi.mjt.food.client.FoodAnalyzerClient.start(FoodAnalyzerClient.java:72)
+	at bg.sofia.uni.fmi.mjt.food.client.FoodAnalyzerClient.main(FoodAnalyzerClient.java:81)
+Caused by: javax.imageio.IIOException: Can't read input file!
+	at java.desktop/javax.imageio.ImageIO.read(ImageIO.java:1264)
+	at bg.sofia.uni.fmi.mjt.food.client.parsing.barcode.BarcodeParser.parse(BarcodeParser.java:23)
+	... 4 more
+
+
+--2026-02-16T11:13:26.234303100--
+Failed to connect to server at port5000
+java.net.ConnectException: Connection refused: connect
+	at java.base/sun.nio.ch.Net.connect0(Native Method)
+	at java.base/sun.nio.ch.Net.connect(Net.java:546)
+	at java.base/sun.nio.ch.Net.connect(Net.java:535)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:585)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:284)
+	at java.base/java.net.Socket.connect(Socket.java:659)
+	at java.base/java.net.Socket.connect(Socket.java:597)
+	at java.base/java.net.Socket.<init>(Socket.java:464)
+	at java.base/java.net.Socket.<init>(Socket.java:276)
+	at bg.sofia.uni.fmi.mjt.food.client.FoodAnalyzerClient.start(FoodAnalyzerClient.java:61)
+	at bg.sofia.uni.fmi.mjt.food.client.FoodAnalyzerClient.main(FoodAnalyzerClient.java:82)
+
+

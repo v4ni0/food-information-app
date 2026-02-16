@@ -125,4 +125,13 @@ class CommandParserTest {
         assertThrows(InvalidClientMessageException.class, () -> CommandParser.parse(input),
             "Should throw when non-existing command is provided");
     }
+
+    @Test
+    void testParseCommandBarcodeWithImage() throws InvalidClientMessageException {
+        String input = "get-food-by-barcode --img=... --code=1505";
+        Command commmand = CommandParser.parse(input);
+        assertEquals(Type.GET_FOOD_BY_BARCODE, commmand.type(),
+            "Command type should be GET_FOOD_BY_BARCODE");
+        assertEquals("1505", commmand.barcode(), "barcode should be 1505");
+    }
 }

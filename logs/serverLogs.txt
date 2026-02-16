@@ -1,0 +1,32 @@
+--2026-02-16T11:13:34.073373200--
+Couldn`t read key from file
+java.nio.file.NoSuchFileException: D:\IntelliJ\java\Food Analyzer\FoodAnalyzerKey.txt
+	at java.base/sun.nio.fs.WindowsException.translateToIOException(WindowsException.java:85)
+	at java.base/sun.nio.fs.WindowsException.rethrowAsIOException(WindowsException.java:103)
+	at java.base/sun.nio.fs.WindowsException.rethrowAsIOException(WindowsException.java:108)
+	at java.base/sun.nio.fs.WindowsFileSystemProvider.newByteChannel(WindowsFileSystemProvider.java:231)
+	at java.base/java.nio.file.Files.newByteChannel(Files.java:357)
+	at java.base/java.nio.file.Files.newByteChannel(Files.java:399)
+	at java.base/java.nio.file.Files.readAllBytes(Files.java:2973)
+	at java.base/java.nio.file.Files.readString(Files.java:3043)
+	at java.base/java.nio.file.Files.readString(Files.java:3006)
+	at bg.sofia.uni.fmi.mjt.food.server.FoodAnalyzerServer.readKeyFromFile(FoodAnalyzerServer.java:56)
+	at bg.sofia.uni.fmi.mjt.food.server.FoodAnalyzerServer.main(FoodAnalyzerServer.java:61)
+
+
+--2026-02-16T11:14:30.725422700--
+Couldn`t read key from file
+java.nio.file.NoSuchFileException: D:\IntelliJ\java\Food Analyzer\FoodAnalyzerKey.txt
+	at java.base/sun.nio.fs.WindowsException.translateToIOException(WindowsException.java:85)
+	at java.base/sun.nio.fs.WindowsException.rethrowAsIOException(WindowsException.java:103)
+	at java.base/sun.nio.fs.WindowsException.rethrowAsIOException(WindowsException.java:108)
+	at java.base/sun.nio.fs.WindowsFileSystemProvider.newByteChannel(WindowsFileSystemProvider.java:231)
+	at java.base/java.nio.file.Files.newByteChannel(Files.java:357)
+	at java.base/java.nio.file.Files.newByteChannel(Files.java:399)
+	at java.base/java.nio.file.Files.readAllBytes(Files.java:2973)
+	at java.base/java.nio.file.Files.readString(Files.java:3043)
+	at java.base/java.nio.file.Files.readString(Files.java:3006)
+	at bg.sofia.uni.fmi.mjt.food.server.FoodAnalyzerServer.readKeyFromFile(FoodAnalyzerServer.java:56)
+	at bg.sofia.uni.fmi.mjt.food.server.FoodAnalyzerServer.main(FoodAnalyzerServer.java:61)
+
+

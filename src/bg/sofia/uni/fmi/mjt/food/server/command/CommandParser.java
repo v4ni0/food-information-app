@@ -76,7 +76,6 @@ public class CommandParser {
             case GET_FOOD -> parseGetFoodCommand(parts);
             case GET_FOOD_REPORT -> parseGetFoodReportCommand(parts);
             case GET_FOOD_BY_BARCODE -> parseGetFoodByBarcodeCommand(parts);
-            default -> throw new InvalidClientMessageException("Unsupported command");
         };
     }
 }
